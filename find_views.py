@@ -3,15 +3,19 @@
 
 import PIL
 from PIL import Image
+from PIL import ImageGrab
 import time
-import pyscreenshot as ImageGrab
+import pyautogui
+#import pyscreenshot as ImageGrab
 import pytesseract
 
 # global variables
 totalViews = 0
 latestViewCount = 0
-sameCountCounter = 0
+sameCountCounter = 1
 nothingFoundCounter = 0
+totalSuccesses = 0
+totalRuns = 0
 
 def resizeImage(im):
 	basewidth = 1250
@@ -21,77 +25,93 @@ def resizeImage(im):
 	return im
 
 def screenShot():
-	if __name__ == "__main__":
-		im = ImageGrab.grab(bbox=(5, 500, 850, 1320)) # bbox=(5, 70, 850, 1320)
-		im = im.convert("L")
-		big_im = resizeImage(im)
-		return big_im
+	#if __name__ == "__main__":
+	im = PIL.ImageGrab.grab(bbox=(5, 850, 850, 1320)) # bbox=(5, 70, 850, 1320)
+	im = im.convert("L")
+	big_im = resizeImage(im)
+	return big_im
+
+def saveViews(totalViews, latestViewCount):
+	totalViews = totalViews
+	print("The total views are %s" % totalViews)
+	with open('total_views.txt', 'w+') as f:
+		f.write("totalviewcount: " + str(totalViews) + "\nlastviewcount: " + str(latestViewCount))
+	exit()
+
+def counterCheck(viewCount, totalViews, latestViewCount):
+	global nothingFoundCounter
+	global sameCountCounter
+	if viewCount == latestViewCount:
+		if sameCountCounter == 10:
+			saveViews(totalViews, latestViewCount)
+		else:
+			sameCountCounter += 1
+			print ("This value has printed %s times" % sameCountCounter)
+			getViewsWithPytesseract()
+	else:
+		nothingFoundCounter = 0
+		sameCountCounter = 1
+
+def hasNumbers(inputString):
+	return any(char.isdigit() for char in inputString)
+
+def shiftDown():
+	print "\nGoing down...\n"
+	# counter = 0
+	# while counter < 6:
+	# 	#time.sleep(0.5)
+	# 	pyautogui.press('down')
+	# 	counter += 1
+	pyautogui.press('down')
+
+def evaluateViews(line):
+	global totalSuccesses
+	global totalViews
+	global latestViewCount
+
+	totalSuccesses += 1
+	if hasNumbers(line):
+		viewCount = int(filter(str.isdigit, line))
+		counterCheck(viewCount, totalViews, latestViewCount)
+		latestViewCount = viewCount
+		totalViews += latestViewCount
+		print ("View count: %s" % latestViewCount)
+		print ("Total views: %s" % totalViews)
+		print ("Successes: %s" % totalSuccesses)
+	getViewsWithPytesseract()
 
 def getViewsWithPytesseract():
-	global latestViewCount
-	global totalViews
-	global sameCountCounter
-	global nothingFoundCounter
-	print("4 seconds...")
-	time.sleep(4)
-	im = screenShot()
-	s = pytesseract.image_to_string(im, config='-psm 6')
-	print s
-	if "views" in s != -1:
-		for line in s.split("\n"):
-			if "views" in line:
-				viewCount = int(filter(str.isdigit, line))
-				if viewCount == latestViewCount:
-					sameCountCounter += 1
-					print sameCountCounter
-				if sameCountCounter < 6:
-					latestViewCount = viewCount
-					totalViews += latestViewCount
-					print latestViewCount
-					print totalViews
-					nothingFoundCounter = 0
-					getViewsWithPytesseract()
+	global latestViewCount, totalViews, nothingFoundCounter, totalRuns
+	while totalRuns < 500:
+		try:
+			print("Runs: %s" % totalRuns)
+			totalRuns += 1
+			shiftDown()
+			#time.sleep(1)
+			im = screenShot()
+			s = pytesseract.image_to_string(im, config='-psm 6')
+			#print s
+			if "views" in s != -1:
+				for line in s.split("\n"):
+					if "views" in line:
+						evaluateViews(line)
+			elif "vlews" in s != -1:
+				for line in s.split("\n"):
+					if "vlews" in line:
+						evaluateViews(line)
+			elif "VIEWS" in s != -1:
+				for line in s.split("\n"):
+					if "vlews" in line:
+						evaluateViews(line)
+			else:
+				if nothingFoundCounter == 15:
+					saveViews(totalViews, latestViewCount)
 				else:
-					print("The total is %s" % totalViews)
-	elif "vlews" in s != -1:
-		for line in s.split("\n"):
-			if "vlews" in line:
-				viewCount = int(filter(str.isdigit, line))
-				if viewCount == latestViewCount:
-					sameCountCounter += 1
-					print sameCountCounter
-				if sameCountCounter < 6:
-					latestViewCount = viewCount
-					totalViews += latestViewCount
-					print latestViewCount
-					print totalViews
-					nothingFoundCounter = 0
+					nothingFoundCounter += 1
+					print("Nothing found %s times" % nothingFoundCounter)
 					getViewsWithPytesseract()
-				else:
-					print("The total is %s" % totalViews)
-	elif "VIEWS" in s != -1:
-		for line in s.split("\n"):
-			if "vlews" in line:
-				viewCount = int(filter(str.isdigit, line))
-				if viewCount == latestViewCount:
-					sameCountCounter += 1
-					print sameCountCounter
-				if sameCountCounter < 6:
-					latestViewCount = viewCount
-					totalViews += latestViewCount
-					print latestViewCount
-					print totalViews
-					nothingFoundCounter = 0
-					getViewsWithPytesseract()
-				else:
-					print("The total is %s" % totalViews)
-	else:
-		if nothingFoundCounter < 6:
-			print "nothing found"
-			nothingFoundCounter += 1
-			getViewsWithPytesseract()
-		else:
-			print("The total is %s" % totalViews)
+		except Exception, e:
+			print ("Something went terribly wrong: %s" % str(e))
 
 def main():
 	global latestViewCount
@@ -99,6 +119,8 @@ def main():
 	start = time.time()
 	totalViews = 0
 	latestViewCount = 0
+	print "Pick window"
+	time.sleep(3)
 	getViewsWithPytesseract()
 	print("--- End: %s seconds ---" % (time.time() - start))
 
