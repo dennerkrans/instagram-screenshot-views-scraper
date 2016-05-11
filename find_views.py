@@ -63,6 +63,7 @@ def shiftDown():
 	# 	pyautogui.press('down')
 	# 	counter += 1
 	pyautogui.press('down')
+	pyautogui.press('down')
 
 def evaluateViews(line):
 	global totalSuccesses
@@ -82,7 +83,7 @@ def evaluateViews(line):
 
 def getViewsWithPytesseract():
 	global latestViewCount, totalViews, nothingFoundCounter, totalRuns
-	while totalRuns < 500:
+	while totalRuns < 1500:
 		try:
 			print("Runs: %s" % totalRuns)
 			totalRuns += 1
@@ -114,11 +115,8 @@ def getViewsWithPytesseract():
 			print ("Something went terribly wrong: %s" % str(e))
 
 def main():
-	global latestViewCount
-	global totalViews
+	pyautogui.FAILSAFE = False
 	start = time.time()
-	totalViews = 0
-	latestViewCount = 0
 	print "Pick window"
 	time.sleep(3)
 	getViewsWithPytesseract()
