@@ -8,6 +8,7 @@ import time
 import pyautogui
 #import pyscreenshot as ImageGrab
 import pytesseract
+import re
 
 # global variables
 totalViews = 0
@@ -63,7 +64,6 @@ def shiftDown():
 	# 	pyautogui.press('down')
 	# 	counter += 1
 	pyautogui.press('down')
-	pyautogui.press('down')
 
 def evaluateViews(line):
 	global totalSuccesses
@@ -72,26 +72,27 @@ def evaluateViews(line):
 
 	totalSuccesses += 1
 	if hasNumbers(line):
-		viewCount = int(filter(str.isdigit, line))
+		viewCount = int(re.search(r'\d+', line).group())
 		counterCheck(viewCount, totalViews, latestViewCount)
 		latestViewCount = viewCount
 		totalViews += latestViewCount
 		print ("View count: %s" % latestViewCount)
 		print ("Total views: %s" % totalViews)
 		print ("Successes: %s" % totalSuccesses)
-	getViewsWithPytesseract()
+	#getViewsWithPytesseract()
 
 def getViewsWithPytesseract():
 	global latestViewCount, totalViews, nothingFoundCounter, totalRuns
-	while totalRuns < 1500:
+	while totalRuns < 10000:
 		try:
 			print("Runs: %s" % totalRuns)
 			totalRuns += 1
-			shiftDown()
-			#time.sleep(1)
+			# shiftDown()
+			pyautogui.press('down')
+			time.sleep(0.5)
 			im = screenShot()
 			s = pytesseract.image_to_string(im, config='-psm 6')
-			#print s
+			print s
 			if "views" in s != -1:
 				for line in s.split("\n"):
 					if "views" in line:
@@ -110,7 +111,7 @@ def getViewsWithPytesseract():
 				else:
 					nothingFoundCounter += 1
 					print("Nothing found %s times" % nothingFoundCounter)
-					getViewsWithPytesseract()
+					#getViewsWithPytesseract()
 		except Exception, e:
 			print ("Something went terribly wrong: %s" % str(e))
 
