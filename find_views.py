@@ -72,7 +72,11 @@ def evaluateViews(line):
 
 	totalSuccesses += 1
 	if hasNumbers(line):
-		viewCount = int(re.search(r'\d+', line).group())
+		# check if there is a comma and remove it
+		if ',' in line:
+			line = line.replace(",", "")
+		viewCountString = re.search(r'\d+', line)
+		viewCount = int(viewCountString.group())
 		counterCheck(viewCount, totalViews, latestViewCount)
 		latestViewCount = viewCount
 		totalViews += latestViewCount

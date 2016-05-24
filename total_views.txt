@@ -1,2 +1,2 @@
-totalviewcount: 43381
-lastviewcount: 261
+totalviewcount: 2344
+lastviewcount: 2344
